@@ -29,6 +29,7 @@ import websocketHandler from './websocket-handler';
 import redisCache from './redis-cache';
 import rbfCache from './rbf-cache';
 import { calcBitsDifference } from './difficulty-adjustment';
+import { calculateFastBlockCpfp, calculateGoodBlockCpfp } from './cpfp';
 
 class Blocks {
   private blocks: BlockExtended[] = [];
@@ -622,7 +623,7 @@ class Blocks {
           // fetch transactions
           txs = (await bitcoinApi.$getTxsForBlock(blockHash)).map(tx => transactionUtils.extendTransaction(tx)) || [];
           // add CPFP
-          const cpfpSummary = Common.calculateCpfp(height, txs, true);
+          const cpfpSummary = calculateFastBlockCpfp(height, txs, true);
           // classify
           const { transactions: classifiedTxs } = this.summarizeBlockTransactions(blockHash, cpfpSummary.transactions);
           await BlocksSummariesRepository.$saveTransactions(height, blockHash, classifiedTxs, 1);
@@ -651,7 +652,7 @@ class Blocks {
               }
               templateTxs.push(tx || templateTx);
             }
-            const cpfpSummary = Common.calculateCpfp(height, templateTxs?.filter(tx => tx['effectiveFeePerVsize'] != null) as TransactionExtended[], true);
+            const cpfpSummary = calculateFastBlockCpfp(height, templateTxs?.filter(tx => tx['effectiveFeePerVsize'] != null) as TransactionExtended[], true);
             // classify
             const { transactions: classifiedTxs } = this.summarizeBlockTransactions(blockHash, cpfpSummary.transactions);
             const classifiedTxMap: { [txid: string]: TransactionClassified } = {};
@@ -856,7 +857,7 @@ class Blocks {
         }
       }
 
-      const cpfpSummary: CpfpSummary = Common.calculateCpfp(block.height, transactions);
+      const cpfpSummary: CpfpSummary = calculateGoodBlockCpfp(block.height, transactions);
       const blockExtended: BlockExtended = await this.$getBlockExtended(block, cpfpSummary.transactions);
       const blockSummary: BlockSummary = this.summarizeBlockTransactions(block.id, cpfpSummary.transactions);
       this.updateTimerProgress(timer, `got block data for ${this.currentBlockHeight}`);
@@ -1351,7 +1352,7 @@ class Blocks {
     }
 
     if (transactions?.length != null) {
-      const summary = Common.calculateCpfp(height, transactions as TransactionExtended[]);
+      const summary = calculateFastBlockCpfp(height, transactions as TransactionExtended[]);
 
       await this.$saveCpfp(hash, height, summary);
 
