@@ -26,6 +26,7 @@ const networks = Object.keys(networkModules);
 })
 export class NavigationService {
   subnetPaths = new BehaviorSubject<Record<string,string>>({});
+  initialLoad = true;
 
   constructor(
     private stateService: StateService,
@@ -35,6 +36,9 @@ export class NavigationService {
       filter(event => event instanceof NavigationEnd),
       map(() => this.router.routerState.snapshot.root),
     ).subscribe((state) => {
+      if (this.initialLoad) {
+        this.initialLoad = false;
+      }
       this.updateSubnetPaths(state);
     });
   }
@@ -81,5 +85,9 @@ export class NavigationService {
       });
     });
     this.subnetPaths.next(subnetPaths);
+  }
+
+  isInitialLoad(): boolean {
+    return this.initialLoad;
   }
 }
