@@ -270,8 +270,6 @@ class BitcoinRoutes {
 					this.getAddressPrefix,
 				)
 		}
-
-		app._router.stack.forEach(this.printRoutes)
 	}
 
 	private getInitData(req: Request, res: Response) {
