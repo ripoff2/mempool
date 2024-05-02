@@ -60,6 +60,10 @@ class BitcoinRoutes {
 				this.getRbfHistory,
 			)
 			.get(
+				config.MEMPOOL.API_URL_PREFIX + 'tx/:txId/replaced-by',
+				this.getReplacedBy,
+			)
+			.get(
 				config.MEMPOOL.API_URL_PREFIX + 'tx/:txId/cached',
 				this.getCachedTx,
 			)
@@ -934,6 +938,15 @@ class BitcoinRoutes {
 		try {
 			const result = rbfCache.getReplaces(req.params.txId)
 			res.json(result || [])
+		} catch (e) {
+			res.status(500).send(e instanceof Error ? e.message : e)
+		}
+	}
+
+	private async getReplacedBy(req: Request, res: Response) {
+		try {
+			const result = rbfCache.getReplacedBy(req.params.txId)
+			res.json(result || '')
 		} catch (e) {
 			res.status(500).send(e instanceof Error ? e.message : e)
 		}
