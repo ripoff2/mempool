@@ -53,6 +53,7 @@ class RbfCache {
 		// don't remove a transaction while a newer version remains in the mempool
 		if (this.replaces[txid] && !this.replacedBy[txid]) {
 			const replaces = this.replaces[txid]
+			logger.debug(`RBF: removing ${txid} and all prior versions`)
 			delete this.replaces[txid]
 			for (const tx of replaces) {
 				// recursively remove prior versions from the cache
